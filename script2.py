@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import sqlite3
-
+# 14424
 # Connet to the database 'gallery'
 connection = sqlite3.connect('./db/gallery.sqlite')
 
@@ -34,13 +34,38 @@ for i in range(0, total_cnt):
                 values = soup.find_all('span', class_={'artwork-tombstone--label'})
                 for value in values:
                     if value.text == "Dimensions:":
-                        demension = value.find_next_sibling('span', class_={'artwork-tombstone--value'}).text
+                        dimension = value.find_next_sibling('span', class_={'artwork-tombstone--value'}).text
 
-            # style = result.get('style', 'Default')
-            # genre = result.get('genre', 'Default')
-        query = f"INSERT INTO gallery_info(title, artist, description, image_url, date, medium, location, demensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{date}', '{medium}', '{location}', '{demension}', 'https://www.metmuseum.org/art/collection/search?showOnly=withImage&offset=160&material=Paintings')"
-        connection.execute(query)
-        connection.commit()
+            if title:
+                title = title.replace("'", '"')
+            if artist:
+                artist = artist.replace("'", '"')
+            if description:
+                description = description.replace("'", '"')
+            if img_url:
+                img_url = img_url.replace("'", '"')
+            if date:
+                date = date.replace("'", '"')
+            if medium:
+                medium = medium.replace("'", '"')
+            if dimension:
+                dimension = dimension.replace("'", '"')
+            if location:
+                location = location.replace("'", '"')
+            
+            print("-----------------------------------------------------------------------------------------------")
+            print(f"title: {title}")
+            print(f"artist: {artist}")
+            print(f"description: {description}")
+            print(f"img_url: {img_url}")
+            print(f"date: {date}")
+            print(f"medium: {medium}")
+            print(f"dimension: {dimension}")
+            print(f"location: {location}")
+
+            query = f"INSERT INTO gallery_info(title, artist, description, image_url, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{date}', '{medium}', '{location}', '{dimension}', 'https://www.metmuseum.org/art/collection/search?showOnly=withImage&offset=160&material=Paintings')"
+            connection.execute(query)
+            connection.commit()
     except:
         continue
 

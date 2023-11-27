@@ -26,13 +26,40 @@ for result in results:
     title = result.get('title', 'Default')
     artist = result['artists'][0]['name']
     description = result.get('assistivetext', 'Default')
+    
     img_url = result.get('imagepath', 'Default')
     date = result.get('displaydate', 'Default')
     style = result.get('classification', 'Default')
     medium = result.get('medium', 'Default')
-    demension = f"{result.get('dimensions1', 'Default')}, {result.get('dimensions2', 'Default')}"
+    dimension = f"{result.get('dimensions1', 'Default')}, {result.get('dimensions2', 'Default')}"
+    if title:
+        title = title.replace('"', "'")
+    if artist:
+        artist = artist.replace('"', "'")
+    if description:
+        description = description.replace('"', "'")
+    if img_url:
+        img_url = img_url.replace('"', "'")
+    if date:
+        date = date.replace('"', "'")
+    if style:
+        style = style.replace('"', "'")
+    if medium:
+        medium = medium.replace('"', "'")
+    if dimension:
+        dimension = dimension.replace('"', "'")
+    print("------------------------------------------------------------------------------------------------------------------")
+    print(f"title: {title}")
+    print(f"artist: {artist}")
+    print(f"description: {description}")
+    print(f"img_url: {img_url}")
+    print(f"date: {date}")
+    print(f"style: {style}")
+    print(f"medium: {medium}")
+    print(f"dimension: {dimension}")
 
-    query = f'INSERT INTO gallery_info(title, artist, description, image_url, date, style, medium, demensions, source) VALUES("{title}", "{artist}", "{description}", "{img_url}", "{date}", "{style}", "{medium}", "{demension}", "https://www.nga.gov/collection-search-result.html?sortOrder=DEFAULT&artobj_classification=painting&pageSize=30&pageNumber=144&lastFacet=artobj_classification")'
+
+    query = f'INSERT INTO gallery_info(title, artist, description, image_url, date, style, medium, dimensions, source) VALUES("{title}", "{artist}", "{description}", "{img_url}", "{date}", "{style}", "{medium}", "{dimension}", "https://www.nga.gov/collection-search-result.html?sortOrder=DEFAULT&artobj_classification=painting&pageSize=30&pageNumber=144&lastFacet=artobj_classification")'
     connection.execute(query)
     connection.commit()
 
