@@ -32,6 +32,7 @@ while flag:
             driver = webdriver.Chrome(options=options)
             try:
                 next_url = f"https://artsandculture.google.com{result[4]}"
+                location = next_url.split('/')[len(next_url.split('/')) - 1].replace("'", '"')
                 driver.get(next_url)
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "jP8Fed")))
                 res = driver.page_source
@@ -56,7 +57,9 @@ while flag:
                         detail_links = final_soup.find_all('a', class_="e0WtYb DRVwp bJyJVb PJLMUc")
                         for detail_link in detail_links:
                             img_url = detail_link.get('data-bgsrc').replace('"', "'")
-                            driver.get(f"https://artsandculture.google.com{detail_link.get('href')}")
+                            img_url = f"https:{img_url}"
+                            source = f"https://artsandculture.google.com{detail_link.get('href')}"
+                            driver.get(source)
                             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "f9CV0")))
                             detail_soup = BeautifulSoup(driver.page_source, 'html.parser')        
                             gallery_datas = detail_soup.find(class_="rw8Th QwmCXd").find(class_="ve9nKb").find_all('li')
@@ -64,7 +67,7 @@ while flag:
                                 result_data = gallery_data.text
                                 if result_data.startswith('Title'):
                                     title = result_data.replace('Title: ', '').replace("'", '"')
-                                if result_data.startswith('Creator'):
+                                if result_data.startswith('Creator: '):
                                     artist = result_data.replace('Creator: ', '').replace("'", '"')
                                 if result_data.startswith('Date Created'):
                                     date = result_data.replace('Date Created: ', '').replace("'", '"')
@@ -76,13 +79,16 @@ while flag:
                                     medium = result_data.replace('Medium: ', '').replace("'", '"')
                             print('--------------------------------------------------------------------------------------------------------------------')
                             print(f"title: {title}")
+                            print(f"location: {location}")
                             print(f"img_url: {img_url}")
                             print(f"artist: {artist}")
                             print(f"date: {date}")
                             print(f"dimension: {dimension}")
                             print(f"style: {style}")
                             print(f"medium: {medium}")
-                            query = f"INSERT INTO gallery_info(title, artist, image_url, style, date, medium, dimensions, source) VALUES('{title}', '{artist}', '{img_url}', '{style}', '{date}', '{medium}', '{dimension}', 'https://artsandculture.google.com/partner')"
+                            source = source.replace("'", '"')
+                            print(f"source: {source}")
+                            query = f"INSERT INTO gallery_info(title, artist, image_url, style, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{img_url}', '{style}', '{date}', '{medium}', '{location}', '{dimension}', '{source}')"
                             connection.execute(query)
                             connection.commit()
                                 

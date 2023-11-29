@@ -25,6 +25,7 @@ def get_gallery_info(contents):
             detail_urls = contents.find('div', class_='mw-category mw-category-columns').find_all('a')
             for detail_url in detail_urls:
                 result = requests.get(f"https://en.wikipedia.org{detail_url.get('href')}")
+                source = f"https://en.wikipedia.org{detail_url.get('href')}"
                 if result.status_code == 200:
                     soup_result = BeautifulSoup(result.text, 'html.parser')
                     title = detail_url.get('title')
@@ -43,7 +44,7 @@ def get_gallery_info(contents):
                             for data in datas:
                                 data_value = data.text
                                 if data.find('td', class_='infobox-image'):
-                                    img_url = data.find('td', class_='infobox-image').find('img').get('src')
+                                    img_url = data.find('td', class_='infobox-image').find('img').get('srcset').split('//')[2].replace(' 2x', "")
                                 if data_value.startswith('Artist'):
                                     artist = data.find(class_='infobox-data attendee').text
                                 if data_value.startswith('Year'):
@@ -77,6 +78,7 @@ def get_gallery_info(contents):
                             continue
                     style = 'painting'
                     if img_url:
+                        img_url = f"https://{img_url}"
                         img_url = img_url.replace('"', "'")
                     if artist:
                         artist = artist.replace('"', "'")
@@ -92,7 +94,7 @@ def get_gallery_info(contents):
                         dimension = dimension.replace('"', "'")
                     if title:
                         title = title.replace('"', "'")
-                    query = f'INSERT INTO gallery_info(title, description, artist, image_url, style, date, medium, location, dimensions, source) VALUES("{title}", "{description}", "{artist}", "{img_url}", "{style}", "{date}", "{medium}", "{location}", "{dimension}", "https://en.wikipedia.org/wiki/Category:Paintings_by_artist")'
+                    query = f'INSERT INTO gallery_info(title, description, artist, image_url, style, date, medium, location, dimensions, source) VALUES("{title}", "{description}", "{artist}", "{img_url}", "{style}", "{date}", "{medium}", "{location}", "{dimension}", "{source}")'
                     connection.execute(query)
                     connection.commit()
                     cnt += 1

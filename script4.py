@@ -38,20 +38,32 @@ for i in range(1, total_cnt + 1):
                 print('----2----', index)
                 img_url = result.find('img').get('data-src')
                 detail_url = f"https://www.rijksmuseum.nl{result.find('figcaption').find('h2', class_='margin-bottom-halfx h3-like').find('a').get('href')}"
+                source = detail_url
                 response = requests.get(detail_url)
                 if response.status_code == 200:
-                    try:
+                    try:                      
                         detail_page = BeautifulSoup(response.text, 'html.parser')
                         title = detail_page.find('h1', class_='h3-like').text
-                        identifications = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[0].find('div', class_='group-data').find_all(class_='item-data')
-                        style = identifications[1].find('a').text
-                        description = identifications[len(identifications) - 1].text
-                        artist = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[1].find('div', class_='group-data').find_all(class_='item-data')[0].find('a').text
-                        date = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[1].find('div', class_='group-data').find_all(class_='item-data')[1].text
-                        materials = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[2].find('div', class_='group-data').find_all(class_='item-data')
-                        medium = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[2].find('div', class_='group-data').find_all(class_='item-data')[len(materials) - 2].text
-                        dimension = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[2].find('div', class_='group-data').find_all(class_='item-data')[len(materials) - 1].text
-
+                        artist = title.split(',')[len(title.split(',')) - 2].strip()
+                        date = title.split(',')[len(title.split(',')) - 1].strip()
+                        medium = detail_page.find('h1', class_='h3-like').find_next_sibling('p').text.split(',')[0].strip()
+                        style= 'painting'
+                        description = ''
+                        if 'More details' in detail_page.find(class_='caption text-subtle').text:
+                            identifications = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[0].find('div', class_='group-data').find_all(class_='item-data')
+                            description = identifications[len(identifications) - 1].text.strip()
+                            dimension = detail_page.find('h1', class_='h3-like').find_next_sibling('p').text.split(',')[1].replace(' More details', '').strip()
+                        else :
+                            dimension = detail_page.find('h1', class_='h3-like').find_next_sibling('p').text.split(',')[1].replace(' Catalogue entry', '').strip()
+                            entry_url = f"https://www.rijksmuseum.nl{detail_page.find(class_='caption text-subtle').find('a').get('href')}"
+                            source = entry_url
+                            entry_res = requests.get(entry_url)
+                            if entry_res.status_code == 200:
+                                entry_page = BeautifulSoup(entry_res.text, 'html.parser')
+                                description = entry_page.find('article', class_='chapter chapter-entry reset-padding-bottom').text
+                                description = description.replace('Entry', '').strip()
+                            else:
+                                continue
                         if description:
                             description = description.replace("'", '"')
                         if title:
@@ -70,9 +82,16 @@ for i in range(1, total_cnt + 1):
                             img_url = img_url.replace("'", '"')
                             img_url += '0'
 
-                        query = f"INSERT INTO gallery_info(title, artist, description, image_url, style, date, medium, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{style}', '{date}', '{medium}', '{dimension}', 'https://www.rijksmuseum.nl/en/search?f=1&p=2&ps=12&type=painting&st=Objects&ii=0')"
+                        query = f"INSERT INTO gallery_info(title, artist, description, image_url, style, date, medium, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{style}', '{date}', '{medium}', '{dimension}', '{detail_url}')"
                         connection.execute(query)
                         connection.commit()
+                        print(f"title: {title}")
+                        print(f"artist: {artist}")
+                        print(f"medium: {medium}")
+                        print(f"date: {date}")
+                        print(f"dimension: {dimension}")
+                        print(f"img_url: {img_url}")
+                        print(f"decription: {description}")
                     except Exception as err:
                         print(f"Unexpected => {err=}, {type(err)=}")
                         error_count += 1

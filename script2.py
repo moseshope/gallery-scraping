@@ -43,6 +43,7 @@ for i in range(0, total_cnt):
             if description:
                 description = description.replace("'", '"')
             if img_url:
+                img_url = f"https://images.metmuseum.org/CRDImages/{img_url}"
                 img_url = img_url.replace("'", '"')
             if date:
                 date = date.replace("'", '"')
@@ -63,7 +64,7 @@ for i in range(0, total_cnt):
             print(f"dimension: {dimension}")
             print(f"location: {location}")
 
-            query = f"INSERT INTO gallery_info(title, artist, description, image_url, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{date}', '{medium}', '{location}', '{dimension}', 'https://www.metmuseum.org/art/collection/search?showOnly=withImage&offset=160&material=Paintings')"
+            query = f"INSERT INTO gallery_info(title, artist, description, image_url, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{date}', '{medium}', '{location}', '{dimension}', '{detail_url}')"
             connection.execute(query)
             connection.commit()
     except:

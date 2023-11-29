@@ -24,8 +24,11 @@ results = res['results']
 
 for result in results:
     title = result.get('title', 'Default')
-    artist = result['artists'][0]['name']
+    name = result['artists'][0]['forwardName']
+    role = result['artists'][0]['role']
+    nation = result['artists'][0]['displaydatecons']
     description = result.get('assistivetext', 'Default')
+    artist = f"{name} ({role}) {nation}"
     
     img_url = result.get('imagepath', 'Default')
     date = result.get('displaydate', 'Default')
