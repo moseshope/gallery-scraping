@@ -8,6 +8,8 @@ connection = sqlite3.connect('./db/gallery.sqlite')
 cnt = 0
 error_cnt = 0
 
+print('Scrapping started!')
+
 def get_gallery_info(contents):
     global error_cnt, cnt
     if not contents.find('div', id='mw-pages'):
@@ -31,8 +33,12 @@ def get_gallery_info(contents):
                     title = detail_url.get('title')
                     description = ''
                     if soup_result.find('div', id='mw-content-text').find('p'):
-                        description = soup_result.find('div', id='mw-content-text').find('p').text
-                        description = description.replace('"', "'")
+                        description = soup_result.find('div', id='mw-content-text').find('p').text.strip()
+                        print('==1==>', description)
+                        if not description:
+                            list = soup_result.find('div', id='mw-content-text').find_all('p')
+                            description = list[1].text
+                            print('==2==>', description)
                     if soup_result.find('table', class_='infobox vevent'):
                         data_table = soup_result.find('table', class_='infobox vevent')
                     else :
@@ -66,11 +72,12 @@ def get_gallery_info(contents):
                             if last_result.status_code == 200:
                                 detailed_soup = BeautifulSoup(last_result.text, 'html.parser')
                                 data_table = detailed_soup.find('div', id='shared-image-desc').find('table')
-                                description = data_table.find(class_='description').text
+                                if not description:
+                                    description = data_table.find(class_='description').text
                                 date = data_table.find(id='fileinfotpl_date').find_next_sibling('td').text
                                 medium = data_table.find(id='fileinfotpl_art_medium').find_next_sibling('td').text
                                 dimension = data_table.find(id='fileinfotpl_art_dimensions').find_next_sibling('td').text
-                                print(detailed_soup.find_all(id='creator'))
+                                # print(detailed_soup.find_all(id='creator'))
                                 artist = detailed_soup.find_all(id='creator')[0].text
                                 location = detailed_soup.find_all(id='creator')[1].text
                         except:
@@ -98,6 +105,7 @@ def get_gallery_info(contents):
                     connection.execute(query)
                     connection.commit()
                     cnt += 1
+                    print('[Scrapped count] :', cnt)
         return
 
 

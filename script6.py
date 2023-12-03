@@ -52,10 +52,10 @@ while flag:
                             time.sleep(1)
                         print("------------------Delay 2s--------------------------")
                         page_source = driver.page_source
-                        title = artist = date = dimension = style = medium = img_url = ""
                         final_soup = BeautifulSoup(page_source, 'html.parser')
                         detail_links = final_soup.find_all('a', class_="e0WtYb DRVwp bJyJVb PJLMUc")
                         for detail_link in detail_links:
+                            title = artist = date = dimension = style = medium = img_url = description = ""
                             img_url = detail_link.get('data-bgsrc').replace('"', "'")
                             img_url = f"https:{img_url}"
                             source = f"https://artsandculture.google.com{detail_link.get('href')}"
@@ -63,6 +63,10 @@ while flag:
                             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "f9CV0")))
                             detail_soup = BeautifulSoup(driver.page_source, 'html.parser')        
                             gallery_datas = detail_soup.find(class_="rw8Th QwmCXd").find(class_="ve9nKb").find_all('li')
+                            if detail_soup.find(class_='R5VDUc'):
+                                description = detail_soup.find(class_='R5VDUc').text
+                                if description:
+                                    description = description.replace("'", '"')
                             for gallery_data in gallery_datas:
                                 result_data = gallery_data.text
                                 if result_data.startswith('Title'):
@@ -80,6 +84,7 @@ while flag:
                             print('--------------------------------------------------------------------------------------------------------------------')
                             print(f"title: {title}")
                             print(f"location: {location}")
+                            print(f"description: {description}")
                             print(f"img_url: {img_url}")
                             print(f"artist: {artist}")
                             print(f"date: {date}")
@@ -88,7 +93,7 @@ while flag:
                             print(f"medium: {medium}")
                             source = source.replace("'", '"')
                             print(f"source: {source}")
-                            query = f"INSERT INTO gallery_info(title, artist, image_url, style, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{img_url}', '{style}', '{date}', '{medium}', '{location}', '{dimension}', '{source}')"
+                            query = f"INSERT INTO gallery_info(title, artist, description, image_url, style, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{style}', '{date}', '{medium}', '{location}', '{dimension}', '{source}')"
                             connection.execute(query)
                             connection.commit()
                                 

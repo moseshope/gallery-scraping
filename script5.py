@@ -23,18 +23,19 @@ res = requests.get(url).json()
 results = res['results']
 
 for result in results:
-    title = result.get('title', 'Default')
+    title = result.get('title', '')
     name = result['artists'][0]['forwardName']
     role = result['artists'][0]['role']
     nation = result['artists'][0]['displaydatecons']
-    description = result.get('assistivetext', 'Default')
+    description = result.get('assistivetext', '')
     artist = f"{name} ({role}) {nation}"
     
-    img_url = result.get('imagepath', 'Default')
-    date = result.get('displaydate', 'Default')
-    style = result.get('classification', 'Default')
-    medium = result.get('medium', 'Default')
-    dimension = f"{result.get('dimensions1', 'Default')}, {result.get('dimensions2', 'Default')}"
+    img_url = result.get('download', f"{result.get('imagepath', '')}")
+    date = result.get('displaydate', '')
+    style = result.get('classification', '')
+    medium = result.get('medium', '')
+    dimension = f"{result.get('dimensions1', '')}, {result.get('dimensions2', '')}"
+    detailed_url = f"https://www.nga.gov{result.get('url', '')}"
     if title:
         title = title.replace('"', "'")
     if artist:
@@ -51,6 +52,8 @@ for result in results:
         medium = medium.replace('"', "'")
     if dimension:
         dimension = dimension.replace('"', "'")
+    if detailed_url:
+        detailed_url = detailed_url.replace('"', "'")
     print("------------------------------------------------------------------------------------------------------------------")
     print(f"title: {title}")
     print(f"artist: {artist}")
@@ -62,7 +65,7 @@ for result in results:
     print(f"dimension: {dimension}")
 
 
-    query = f'INSERT INTO gallery_info(title, artist, description, image_url, date, style, medium, dimensions, source) VALUES("{title}", "{artist}", "{description}", "{img_url}", "{date}", "{style}", "{medium}", "{dimension}", "https://www.nga.gov/collection-search-result.html?sortOrder=DEFAULT&artobj_classification=painting&pageSize=30&pageNumber=144&lastFacet=artobj_classification")'
+    query = f'INSERT INTO gallery_info(title, artist, description, image_url, date, style, medium, dimensions, source) VALUES("{title}", "{artist}", "{description}", "{img_url}", "{date}", "{style}", "{medium}", "{dimension}", "{detailed_url}")'
     connection.execute(query)
     connection.commit()
 

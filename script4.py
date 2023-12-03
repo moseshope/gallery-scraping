@@ -50,18 +50,25 @@ for i in range(1, total_cnt + 1):
                         style= 'painting'
                         description = ''
                         if 'More details' in detail_page.find(class_='caption text-subtle').text:
-                            identifications = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[0].find('div', class_='group-data').find_all(class_='item-data')
-                            description = identifications[len(identifications) - 1].text.strip()
+                            identifications = detail_page.find_all('article', class_='group div-loop div-thin div-bottom-none')[0].find('div', class_='group-data').find_all(class_='item')
+                            txt = identifications[len(identifications) - 1].find(class_='item-label h4-like').text
+                            if txt == 'Description':
+                                print('1111111111111111111111111111111111111111111111111111111111111111111111111111111111111')
+                                description = identifications[len(identifications) - 1].find(class_='item-data').text
+                            else:
+                                print('33333333333333333333333333333333333333333333333333333333333333333333333333333')
                             dimension = detail_page.find('h1', class_='h3-like').find_next_sibling('p').text.split(',')[1].replace(' More details', '').strip()
                         else :
+                            print('222222222222222222222222222222222222222222222222222222222222222222222222222222222222222')
                             dimension = detail_page.find('h1', class_='h3-like').find_next_sibling('p').text.split(',')[1].replace(' Catalogue entry', '').strip()
                             entry_url = f"https://www.rijksmuseum.nl{detail_page.find(class_='caption text-subtle').find('a').get('href')}"
                             source = entry_url
                             entry_res = requests.get(entry_url)
                             if entry_res.status_code == 200:
                                 entry_page = BeautifulSoup(entry_res.text, 'html.parser')
-                                description = entry_page.find('article', class_='chapter chapter-entry reset-padding-bottom').text
-                                description = description.replace('Entry', '').strip()
+                                if entry_page.find('article', class_='chapter chapter-entry reset-padding-bottom'):
+                                    description = entry_page.find('article', class_='chapter chapter-entry reset-padding-bottom').text
+                                    description = description.replace('Entry', '').strip()
                             else:
                                 continue
                         if description:
@@ -82,7 +89,7 @@ for i in range(1, total_cnt + 1):
                             img_url = img_url.replace("'", '"')
                             img_url += '0'
 
-                        query = f"INSERT INTO gallery_info(title, artist, description, image_url, style, date, medium, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{style}', '{date}', '{medium}', '{dimension}', '{detail_url}')"
+                        query = f"INSERT INTO gallery_info(title, artist, description, image_url, style, date, medium, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{style}', '{date}', '{medium}', '{dimension}', '{source}')"
                         connection.execute(query)
                         connection.commit()
                         print(f"title: {title}")

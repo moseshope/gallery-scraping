@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import sqlite3
 import re
+import json
 
 # Connet to the database 'gallery'
 connection = sqlite3.connect('./db/gallery.sqlite')
@@ -33,7 +34,7 @@ for i in range(1, total_cnt + 1):
             results = soup.find_all('div', class_='cs-result-item')
             for result in results:
                 try:
-                    date = location = dimension = img_url = ''
+                    date = location = description = dimension = img_url = ''
                     img_link = result.find('td', class_='cs-result-image').find('a')
                     if img_link:
                         img_url = img_link.get('href')
@@ -42,9 +43,19 @@ for i in range(1, total_cnt + 1):
                     artist = content[1].find('td', class_='cs-value').find('p').text
                     style = content[2].find('td', class_='cs-value').find('p').text
                     medium = content[3].find('td', class_='cs-value').find('p').text
-                    # date = content[4].find('td', class_='cs-value').find('p').text
-                    # location = content[5].find('td', class_='cs-value').find('p').text
-                    # dimension = content[8].find('td', class_='cs-value').find('p').text
+                    detailed_url = content[0].find('p', class_='cs-record-link').find('a').get('href')
+                    detail_res = requests.get(detailed_url)
+                    if detail_res.status_code == 200:
+                        data = BeautifulSoup(detail_res.text, 'html.parser')
+                        try:
+                            description = json.loads(data.find('script', {'type':'application/ld+json'}).text)['description']
+                        except:
+                            description = ''
+                        try:
+                            img_url = json.loads(data.find('script', {'type':'application/ld+json'}).text)['thumbnailUrl']
+                            img_url = img_url.replace('!100,100', 'full')
+                        except:
+                            print(img_url)
                     for datas in content:
                         if datas.find(class_='cs-label').find('p').text == 'Date:':
                             date = datas.find(class_='cs-value').find('p').text
@@ -52,13 +63,23 @@ for i in range(1, total_cnt + 1):
                             location = datas.find(class_='cs-value').find('p').text
                         if datas.find(class_='cs-label').find('p').text == 'Dimensions:':
                             dimension = datas.find(class_='cs-value').find('p').text
-                    title = title.replace("'", '"')
-                    artist = artist.replace("'", '"')
-                    style = style.replace("'", '"')
-                    medium = medium.replace("'", '"')
-                    date = date.replace("'", '"')
-                    location = location.replace("'", '"')
-                    dimension = dimension.replace("'", '"')
+                    if title:
+                        title = title.replace("'", '"')
+                    if artist:
+                        artist = artist.replace("'", '"')
+                    if style:
+                        style = style.replace("'", '"')
+                    if medium:
+                        medium = medium.replace("'", '"')
+                    if date:
+                        date = date.replace("'", '"')
+                    if location:
+                        location = location.replace("'", '"')
+                    if dimension:
+                        dimension = dimension.replace("'", '"')
+                    if description:
+                        description = description.replace("'", '"')
+                    detailed_url = detailed_url.replace("'", '"')
 
                     print("-----------------------------------------------------------------------------------------------")
                     print(f"title: {title}")
@@ -69,11 +90,14 @@ for i in range(1, total_cnt + 1):
                     print(f"medium: {medium}")
                     print(f"dimension: {dimension}")
                     print(f"location: {location}")
+                    print(f"description: {description}")
+                    
 
-                    query = f"INSERT INTO gallery_info(title, artist, image_url, style, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{img_url}', '{style}', '{date}', '{medium}', '{location}', '{dimension}', '{url}')"
+                    query = f"INSERT INTO gallery_info(title, artist, description, image_url, style, date, medium, location, dimensions, source) VALUES('{title}', '{artist}', '{description}', '{img_url}', '{style}', '{date}', '{medium}', '{location}', '{dimension}', '{detailed_url}')"
                     connection.execute(query)
                     connection.commit()
                 except Exception as err:
+                    print('00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
                     print(f"Unexpected => {err=}, {type(err)=}")
                     error_count += 1
                     continue
